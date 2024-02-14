@@ -86,3 +86,20 @@ genotype_fuzzy_match_full <- function(x, y, max_dist = 2, ...,
   res[!duplicated(res), ]
 }
 
+#' Renames genotype
+#'
+#' @param x The vector of genotype labels
+#' @param new A two column data.frame or a named vector.
+#' If it is a data.frame, the left is assumed to be old and the right to be new.
+#' If it is a named vector, the elements should be the new genotype labels and the name should be the old genotype label.
+#' @export
+rename_genotype <- function(x, new) {
+  if(is.data.frame(new)) {
+    dict <- setNames(new[[2]], new[[1]])
+  } else {
+    dict <- new
+  }
+  ind <- which(x %in% names(dict))
+  x[ind] <- unname(dict[x[ind]])
+  x
+}
