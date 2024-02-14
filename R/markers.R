@@ -44,13 +44,16 @@ geno_comparisons <- function(x, y, ..., ignore_case = TRUE) {
 #' @rdname genotype-fuzzy-match
 #' @return A data.frame returning the genotype labels that are closely matched.
 #' @export
-genotype_fuzzy_match_left <- function(x, y, ...,
+genotype_fuzzy_match_left <- function(x, y, max_dist = 2, ...,
                                       name_x = "x", name_y = "y",
                                       ignore_case = TRUE) {
   compares <- geno_comparisons(x, y, ..., ignore_case = ignore_case)
   best_match <- tapply(compares$dist$dist, compares$dist$x, which.min)
+  best_dist <- tapply(compares$dist$dist, compares$dist$x, min)
+  best_match[best_dist > max_dist] <- NA
 
-  res <- data.frame(x = compares$x_mismatch, y = compares$y_mismatch[best_match])
+  res <- data.frame(x = compares$x_mismatch,
+                    y = compares$y_mismatch[best_match])
   colnames(res) <- c(name_x, name_y)
   res
 }
@@ -58,24 +61,28 @@ genotype_fuzzy_match_left <- function(x, y, ...,
 
 #' @rdname genotype-fuzzy-match
 #' @export
-genotype_fuzzy_match_right <- function(x, y, ...,
+genotype_fuzzy_match_right <- function(x, y, max_dist = 2, ...,
                                       name_x = "x", name_y = "y",
                                       ignore_case = TRUE) {
   compares <- geno_comparisons(x, y, ..., ignore_case = ignore_case)
   best_match <- tapply(compares$dist$dist, compares$dist$y, which.min)
+  best_dist <- tapply(compares$dist$dist, compares$dist$y, min)
+  best_match[best_dist > max_dist] <- NA
 
   res <- data.frame(x = compares$x_mismatch[best_match], y = compares$y_mismatch)
   colnames(res) <- c(name_x, name_y)
   res
 }
 
+# inspired by fuzzyjoin::stringdist_join
+
 #' @rdname genotype-fuzzy-match
 #' @export
-genotype_fuzzy_match_full <- function(x, y, ...,
-                                       name_x = "x", name_y = "y",
-                                       ignore_case = TRUE) {
-  res <- rbind(genotype_fuzzy_match_right(x, y, ..., name_x = name_x, name_y = name_y, ignore_case = ignore_case),
-        genotype_fuzzy_match_left(x, y, ..., name_x = name_x, name_y = name_y, ignore_case = ignore_case))
+genotype_fuzzy_match_full <- function(x, y, max_dist = 2, ...,
+                                      name_x = "x", name_y = "y",
+                                      ignore_case = TRUE) {
+  res <- rbind(genotype_fuzzy_match_right(x, y, max_dist = max_dist, ..., name_x = name_x, name_y = name_y, ignore_case = ignore_case),
+               genotype_fuzzy_match_left(x, y, max_dist = max_dist, ..., name_x = name_x, name_y = name_y, ignore_case = ignore_case))
   res[!duplicated(res), ]
 }
 
